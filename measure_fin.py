@@ -111,10 +111,12 @@ class OscilloscopeApp:
 
 
     def measure_voltage(self):
-        # Generate random waveform data
-        waveform_data, _, _ = self.do_fft()
+        if not hasattr(self, 'loaded_data'):
+            print("Error: No data loaded.")
+            return
 
         # Calculate voltage measurements
+        waveform_data = self.loaded_data[:, 1]  # Assuming voltage data is in the second column
         peak_to_peak_voltage = np.max(waveform_data) - np.min(waveform_data)
         rms_voltage = np.sqrt(np.mean(waveform_data ** 2))
         vmax = np.max(waveform_data)
@@ -128,14 +130,16 @@ class OscilloscopeApp:
                                         f"Vmin: {vmin:.2f} V\n"
                                         f"Vavg: {vavg:.2f} V")
 
+    
     def measure_time(self):
-        # Generate random waveform data
-        _, _, freq = self.do_fft()
+        if not hasattr(self, 'loaded_data'):
+            print("Error: No data loaded.")
+            return
 
-        # Calculate frequency and time period
-        # Assuming a sampling rate of 1kHz (1000 samples per second)
-        sampling_rate = 1000
-        time_period = 1 / sampling_rate
+        # Assuming the data represents a time series with equal time intervals
+        time_interval = self.loaded_data[1, 0] - self.loaded_data[0, 0]  # Assuming time data is in the first column
+        sampling_rate = 1 / time_interval
+        time_period = time_interval
         frequency = 1 / time_period
 
         # Update label with time measurements
