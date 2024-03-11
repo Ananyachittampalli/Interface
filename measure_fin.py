@@ -33,7 +33,7 @@ class OscilloscopeApp:
         self.plot_waveform_button = ttk.Button(self.control_frame, text="Plot Waveform", command=self.load_data)
         self.plot_waveform_button.pack(side=tk.TOP, padx=10, pady=5, fill=tk.X)
 
-        self.plot_fft_button = ttk.Button(self.control_frame, text="Plot FFT", command=self.plot_fft)
+        self.plot_fft_button = ttk.Button(self.control_frame, text="Plot FFT", command=self.load_data_fft)
         self.plot_fft_button.pack(side=tk.TOP, padx=10, pady=5, fill=tk.X)
 
         # Measure buttons
@@ -71,8 +71,8 @@ class OscilloscopeApp:
         # waveform_data = np.random.rand(100) * 5  # Simulating 100 samples with voltage range 0-5V
 
         # Compute FFT of the waveform data
-        fft_result = np.fft.fft(data)
-        N = len(data)
+        fft_result = np.fft.fft(data[:, 1])
+        N = len(data[:, 0])
         n = np.arange(N)
         T = N / 1000
         freq = n / T
@@ -96,15 +96,19 @@ class OscilloscopeApp:
         self.axis.set_ylabel(labels[1] if labels[1] else "Y-axis")  # Y-axis label from second row of CSV
         self.canvas.draw()
 
-    def plot_fft(self):
-        # Generate random waveform data and its FFT
-        data, _, _ = self.do_fft(self.loaded_data)
+    
+    def plot_fft(self, fft_result, freq):
+        # Compute FFT of the loaded data
+        _, fft_result, freq = self.do_fft(self.loaded_data)
 
         # Plot the FFT
         self.axis.clear()
-        self.axis.plot(data, color='red')  # Assuming the data returned by do_fft is what we want to plot
-        self.axis.set_title('FFT of Random Waveform')
+        self.axis.plot(freq, np.abs(fft_result), color='red')
+        self.axis.set_title('FFT of Waveform')
+        self.axis.set_xlabel('Frequency (Hz)')
+        self.axis.set_ylabel('Amplitude')
         self.canvas.draw()
+
 
     def measure_voltage(self):
         # Generate random waveform data
@@ -156,6 +160,17 @@ class OscilloscopeApp:
             except Exception as e:
                 print("Error loading data:", e)
     
+    def load_data_fft(self):
+        file_path = filedialog.askopenfilename(title="Select Data File", filetypes=(("CSV files", "*.csv"), ("All files", "*.*")))
+        if file_path:
+            try:
+                self.loaded_data = np.loadtxt(file_path, delimiter=',', skiprows=1)
+                labels = np.genfromtxt(file_path, delimiter=',', max_rows=1, dtype=str)
+                self.plot_fft(self.loaded_data, labels)
+            except Exception as e:
+                print("Error loading data:", e)
+
+
     def quit_app(self):
             self.master.destroy()
 
